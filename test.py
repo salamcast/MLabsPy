@@ -15,7 +15,7 @@ import MLabsPy as m
 #file = filedialog.askopenfilenames() # show an "Open" dialog box and return the path to the selected file
 
 
-ML = m.MLabsPy('test.csv')
+ML = m.MLabsPy('MLabsPy3.CSV')
 for x in m.Labels.multi:
     data = ML.plotData(x)
     PLOT=m.Plot(x, 'TEST')

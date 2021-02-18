@@ -36,14 +36,14 @@ class MLabsPy:
         )
         for t in Labels.tag:
             setattr(self, t, log[:][t])
-
-        self.v120 = np.concatenate((self.L1, self.L2, self.L3))
-        self.v208 = np.concatenate((self.L12, self.L23, self.L31))
-        self.amps = np.concatenate((self.I1, self.I2, self.I3, self.In))
-        self.kW = np.concatenate((self.P1, self.P2, self.P3))        
-        self.kAVr = np.concatenate((self.Q1, self.Q2, self.Q3))
-        self.damps = np.concatenate((self.dI1, self.dI2, self.dI3, self.dIo))
-
+        # multi
+        for m in Labels.multi:
+            p = []
+            # col
+            for item in Labels.multi[m]:
+                p = np.concatenate((p, getattr(self, item)))
+            setattr(self, m, p)
+            
     def csv_min(self, t):
         if t in Labels.tag or Labels.multi:
             return np.amin(getattr(self, t, Labels.defaultY))
@@ -75,13 +75,12 @@ class MLabsPy:
         }
         
     def getRow(self, t):
-        if t in Labels.tag:
-            return { 
+        return { 
                 'dataset': getattr(self,t, Labels.defaultY), 
                 'tag': Labels.ylabels.get(t, 'Unknown: ' + t), 
                 'color': Labels.colors.get(t, 'Pink') 
-            }
-        
+        }
+
     def getData(self, t):
         if t in Labels.tag:
             return [ self.getRow(t) ] 
@@ -90,10 +89,20 @@ class MLabsPy:
             for l in Labels.multi[t]:
                 d.append(self.getRow(l))
             return d
-   
-        
+
     def plotData(self, t='120v'):
         return { 'x':self.ts, 'plot': self.getData(t), 'stats': self.getStats(t) }
+    
+    def getCSVdata(self, t):
+        if t in Labels.multi:
+            
+            d = np.hstack(('ts', getattr(self, 'ts')))
+            for l in Labels.multi[t]:
+                n = np.hstack(( l, getattr(self, l) ))
+                d = np.vstack(( d, n ))
+            
+            return d
+
 '''
 Plot()
 
@@ -104,29 +113,38 @@ and can save them to a save directory
 class Plot:
     def __init__(self, tag, save='PlotTests'):
         self.tag = tag
-        try:
-            os.mkdir(save)
+        if save is not False:
+            try:
+                os.mkdir(save)
+            except:
+                pass
             self.file = save + '/' + tag + '.jpg'
-        except:
+        else:
             self.file = False
-
-        
-    width = 0.6
-    pad = 0.6
-    labelsize = 4
-    rotation = 89
+    
+    line = 0.7
+    # ticks    
+    width = 2
+    pad = 2
+    labelsize = 10
+    # xticks
+    xskip = 2
+    xtick = 35
+    rotation = -89
+    # yticks
+    ytick = 16
+    # image
     figsize = [ 11, 8.5 ]
     dpi = 300
+    
 
     def go(self, data=False):
         if data is False:
             data = Labels.defaultPlotData
-
         x = data['x']
-#        t = Labels(self.tag)
         y1, y2 = data['stats']['min'], data['stats']['max']
-        self.unit = Labels.units.get(self.tag, '???')
 
+        self.unit = Labels.units.get(self.tag, '???')
         # start setting up plot
         self.do_plot(x, data['plot'])
         # trim down time for display
@@ -135,12 +153,12 @@ class Plot:
         plt.suptitle(Labels.titles.get(self.tag, 'Default Plot Title'))
         plt.title(self.plot_subtitle(data['stats']))
 
-        xtick = 100
-        while xtick < len(x):
-            x = x[::2]
+        while self.xtick < len(x):
+            x = x[::self.xskip]
         plt.tick_params(width=(self.width), pad=(self.pad), labelsize=(self.labelsize))
         plt.xticks(x, rotation=(self.rotation))
-        plt.yticks(np.linspace(y1, y2, 60))
+
+        plt.yticks(np.linspace(y1, y2, self.ytick))
         plt.legend()
         plt.figure(figsize=self.figsize, dpi=self.dpi)
         if self.file is not False:
@@ -153,26 +171,25 @@ class Plot:
         if D is False:
             D = Labels.defaultPlotData['stats']
         return self.min_data(D['min']) + ', ' + self.max_data(D['max']) + ', ' + self.median_data(D['median']) + ', ' + self.mean_data(D['mean']) + ', ' + self.mode_data(D['mode'])
-        
 
     def min_data(self, D = 0.0):
-        return 'Min: ' + str(D) + self.unit
+        return 'Min: ' + str(round(D, 2)) + " " + self.unit
 
     def max_data(self, D = 0.0):
-        return 'Max: ' + str(D) + self.unit
+        return 'Max: ' + str(round(D, 2)) + " " + self.unit
 
     def median_data(self, D = 0.0):
-        return 'Median: ' + str(D) + self.unit
+        return 'Median: ' + str(round(D, 2)) + " " + self.unit
 
     def mean_data(self, D = 0.0):
-        return 'Mean: ' + str(D) + self.unit
+        return 'Mean: ' + str(round(D, 2)) + " " + self.unit
 
     def mode_data(self, D = [ 0, 1 ]):
-        return 'Mode: ' + str(D[0]) + self.unit + ' X ' + str(D[1])
+        return 'Mode: ' + str(round(D[0], 2)) + " " + self.unit + ' X ' + str(D[1])
 
     def do_plot(self, x, plot):
         for p in plot:
-            plt.plot(x, (p['dataset']), label=(p['tag']), color=(p['color']), linewidth='0.8')
+            plt.plot(x, (p['dataset']), label=(p['tag']), color=(p['color']), linewidth=self.line)
         
 '''
 Loads the values in the lables.py based on tag
@@ -180,10 +197,6 @@ Loads the values in the lables.py based on tag
 class Labels:
     def __init__(self, tag='defalts'):
         self.tag = tag
-#        self.title = Labels.titles.get(tag, 'Default Plot Title')
-#        self.unit = Labels.units.get(tag, '???')
-#        self.ylabel = Labels.ylabels.get(tag, 'Tag not found')       
-#        self.color = Labels.colors.get(tag, 'pink')
 
     def cunits(c):
         ff = c.decode().strip('"').strip().strip("VAHzkWrh").strip()
@@ -195,7 +208,7 @@ class Labels:
 
     defaultX = [ 1, 2, 3, 4, 5]
 
-    defaultY = [ 1.0, 5.6, 7.4, 6.0, 2.0 ]
+    defaultY = [ -66.6, -6.0, 66.6, 6.0, 2.0 ]
 
     defaultPlotRow = [{'dataset': defaultY, 'tag':'default data', 'color':'pink' }]
 
@@ -226,7 +239,7 @@ class Labels:
        "P1", "P2", "P3",
        "Q1", "Q2", "Q3",
        "kWh_Im", "kWh_Ex",
-       "kVArh-C", "kVArh-I"
+       "kVArhC", "kVArhI"
        )
 
     multi ={
@@ -240,7 +253,7 @@ class Labels:
     'kWatt':[ "P1", "P2", "P3" ],
     'kVAr':[ "Q1", "Q2", "Q3" ],
     'kWh':[ "kWh_Im", "kWh_Ex" ],
-    'kVArh': [ "kVArh-C", "kVArh-I" ]
+    'kVArh': [ "kVArhC", "kVArhI" ]
     }
 
 
@@ -288,8 +301,8 @@ class Labels:
     'Q3':'Total reactive power (kVAr)',   
     'kWh_Im':'Import Power kWh', 
     'kWh_Ex':'Export Power kWh', 
-    'kVArh-I':'Inductive Power', 
-    'kVArh-C':'Capacitive Power',
+    'kVArhI':'Inductive Power', 
+    'kVArhC':'Capacitive Power',
     'v120':'Ph-N voltages: V1-V2-V3', 
     'v208':'Ph-Ph voltages: U12-U23-U31', 
     'amps':'Phase currents: I1-I2-I3',
@@ -346,8 +359,8 @@ class Labels:
     'Q3':'kVAr',
     'kWh_Im':'kWh', 
     'kWh_Ex':'kWh', 
-    'kVArh-I':'kVArh', 
-    'kVArh-C':'kVArh',
+    'kVArhI':'kVArh', 
+    'kVArhC':'kVArh',
     'v120':'V', 
     'v208':'V', 
     'amps':'A',    
@@ -404,8 +417,8 @@ class Labels:
     'Q3':'Red',
     'kWh_Im':'Blue', 
     'kWh_Ex':'Red', 
-    'kVArh-I':'Blue', 
-    'kVArh-C':'Red'
+    'kVArhI':'Blue', 
+    'kVArhC':'Red'
     }
     
     ylabels = {
@@ -452,8 +465,8 @@ class Labels:
     'kWh_Im':'kWh', 
     'kWh_Ex':'kWh', 
     'kVArh':'kVArh', 
-    'kVArh-I':'kVArh', 
-    'kVArh-C':'kVArh',
+    'kVArhI':'kVArh', 
+    'kVArhC':'kVArh',
     'v120':'Voltage (V)',  
     'v208':'Voltage (U)', 
     'amps':'Current (I)',
