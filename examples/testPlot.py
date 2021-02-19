@@ -18,11 +18,11 @@ import MLabsPy as m
 ML = m.MLabsPy('MLabsPy3.CSV')
 for x in m.Labels.multi:
     data = ML.plotData(x)
-    PLOT=m.Plot(x, 'TEST')
+    PLOT=m.Plot(x, 'Multi')
     PLOT.go(data)
 
 for x in m.Labels.tag:
     if x != 'ts':
         data = ML.plotData(x)
-        PLOT=m.Plot(x, 'TEST')
+        PLOT=m.Plot(x, 'Tag')
         PLOT.go(data)
