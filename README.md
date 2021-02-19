@@ -44,29 +44,6 @@ access the data after it has been parsed.  Many of the tags have been shortened 
 the origonal one.  I have also added tags for plots that have multiple lines plotted.
 
 
-### example of plotting plotData(tag) with matplotlib
-
-```
-import MLabsPy as m
-file='./test/test.csv'
-ML = m.Parse(file)
-
-p = ML.plotData('v120')
-plt.title('v120')
-ts = p['x']
-full = p['all']
-plot = p['plot']
-    
-for d in plot:
-    plt.plot(ts, d['dataset'], label = d['tag'], color = d['color'], linewidth='0.8')
-
-plt.tick_params(width=0.6, pad=0.6, labelsize=4)
-plt.xticks(ts,rotation=89) 
-plt.xlabel("time")
-plt.ylabel('Voltage')
-plt.legend()
-plt.show()   
-```
 
 ### plotData returns a data structure like: 
 
@@ -80,219 +57,46 @@ plt.show()
         'mean': 0.,
         'mode': [ 0, 1 ]
     },
-    'plot1': [ {  
+    'plot': [ {  
         'dataset': [ 1.,5.6,7.4,6.,2. ],
         'tag': "float test",
         'color': 'red'
     }],
 }
 ```
-### Using the MlabsPy.Plot class to plot the data
+### Using the MLabsPy.Plot class to plot the data
 
 ```
 import MLabsPy as m
 
 file = './test/test.csv'
-ML = m.Parse(file)
+ML = m.MLabsPy(file)
 
-p = ML.plotData('208v')
+# Ploting
+p = ML.plotData('v208')
 plot = m.Plot(x)
 plot.go(p)
 
 ```
 
-### column access
+### Using the MLabsPy.MLabsPy class to get CSV data
 
-you can access your column data by using the object name and the tag name to return
-a numpy array.  I made it easy that way.  the module has 3 objects, one for parsing
-one for labels and one for plotting.  The parser is the main part of this module, 
-MLabsPy.Parse(file).  It expects a log files from the Motion Labs logger to be in the
-correct format, the 45 columns list can be found in MLabsPy.Labels.col.  I have also 
-listed the access tags bellow, with some basic Details
+getCSVdata() returns an array if CSV data, for file writting or pandas.
+this data has been cleaned, so it can be easily imported in excel after 
+making the CSV file.  the first value is a time stamp,the rest are floats.
 
-The MLabsPy.Plot(tag) class is included to show what the data looks like when plotted. 
- 
-The MLabsPy.Labels(tag) class has the labels for the data in the CSV file.  
+```
+import MLabsPy as m
 
-# Record Time
-This is the timestap that this record was taken, it logs every 10-11 secs
+file = './test/test.csv'
+ML = m.MLabsPy(file)
 
-log file column: "Record Time"
+CSV = ML.getCSVdata('v208')
 
-### tags
-* 'x'
+```
 
-# Phase-Nutral voltages - 120 Volts
+### More information in Jupyter Notebooks
 
-log file column: "L1", "L2", "L3"
-
-### tags
-* 'v120'
-* 'L1'
-* 'L2'
-* 'L3'
-
-# Phase-Phase voltages - 208 Volts
-
-log file column: "L12", "L23", "L31"
-
-### tags
-* 'v208'
-* 'L12'
-* 'L23'
-* 'L31'
-
-# Phase currents
-
-log file column: "I1", "I2", "I3", "In"
-
-### tags
-* 'amps'
-* 'A1'
-* 'A2'
-* 'A3'
-* 'An'
-
-# Freqency
-
-* Freq, logged as Hz
-
-log file column: " Freq."
-
-### tags
-* 'Freq'
-
-# Average Phase-Nutral voltage
-
-log file column: "V-avr"
-
-### tags
-* 'Vavr'
-
-# Average Phase-Phase voltage
-
-log file column: "U-avr"
-
-### tags
-* 'Uavr'
-
-# Average current
-
-log file column: "I-avr"
-
-### tags
-* 'Iavr'
- 
-#  Total Active Power (kW), reactive power (kVAr) and apparent power (kVA)
-
-* P is Active power or real power, logged as kW
-* Q is Reactive power, logged as kVar
-* S is Complex power, logged as kVA
-
-log file column: "P", "Q", "S"
-
-### tags
-* "P"
-* "Q"
-* "S"
-
-# Total power factor (pf) 
-
-log file column: " PF "
-
-### tags
-* "PF"
-
-# Demands
-
-* Demands: Phase Currents - dI1 dI2, dI3, dIo as Amps
-* Demands: Active Power - dkW as kW
-* Demands: Reactive Power - dkVAr as kVAr
-
-log file column: " dI1", " dI2", " dI3", " dIo", " dkW", " dkVAr"
-
-### tags
-* 'damps'
-* 'dA1'
-* 'dA2'
-* 'dA3'
-* 'dAo'
-* "dkW"
-* "dkVAr"
-
-# Total harmonic distortion: 
-
-The Total Harmonic Distortion (THD) mode displays the following:
-
-* THD per phase to Nutral - THD L1, THD L2, THD L3
-* THD per phase to phase - THD L12 THD L23 THD L31
-* THD current per phase - THD I1 THD I2 THD I3
-* THD neutral current - THD In
-
-log file column: "THD L1", "THD L2", "THD L3", "THD L12", "THD L23", "THD L31", 
-                    "THD I1", "THD I2", "THD I3", "THD In"
-
-### tags
-*    "THDX"
-*    "THDY"
-*    "THDZ"
-*    "THDAn"
-*    "THDL1"
-*    "THDL2"
-*    "THDL3"
-*    "THDL12"
-*    "THDL23"
-*    "THDL31"
-*    "THDA1"
-*    "THDA2" 
-*    "THDA3"
-
-#  Total Active Power (kW) 
-
-* P1, P2, P3 as kW
-
-log file column: " P1", " P2", " P3"
-
-### tags
-* "kWatt"
-* "P1"
-* "P2"
-* "P3"
-# Total reactive power (kVAr) 
-
-* Q1, Q2, Q3 as kVar
-
-log file column: " Q1", " Q2", " Q3"
-
-### tags
-* "kVAr"
-* "Q1"
-* "Q2"
-* "Q3"
-
-# Log Counters
-
-* Import Power 
-* Export Power 
-* Inductive Power
-* Capacitive Power
-
-## kWh 
-Import power is the total kWh’s used, export is not always connected, depends 
-on your unit. If the meter is a line connected device export power is not used.
-
-log file column: " kWh_Im", " kWh_Ex" 
-
-### tags
-* "kWh"
-* "kWhIm",
-* "kWhEx"
-
-## kVArh
-
-log file column: " kVArh-I", " kVArh-C" 
-
-### tags:
-* "kVArh"
-* "kVArhI"
-* "kVArhC"
+I have created a jupyter notebook for this class to help you see the ploting
+in action.  all the access tags are listed there along with some more information
+about the data being logged.

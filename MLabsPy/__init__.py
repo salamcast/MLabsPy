@@ -26,7 +26,7 @@ class MLabsPy:
                 csv_clean[c]=Labels.cts
             else:
                 csv_clean[c]=Labels.cunits
-        log = np.loadtxt(
+        self.log = np.loadtxt(
             file, 
             delimiter=';', 
             dtype={ 'names': Labels.tag, 'formats': Labels.csv_format },
@@ -34,8 +34,9 @@ class MLabsPy:
             skiprows=4,
             usecols=Labels.csv_cols 
         )
+        
         for t in Labels.tag:
-            setattr(self, t, log[:][t])
+            setattr(self, t, self.log[:][t])
         # multi
         for m in Labels.multi:
             p = []
@@ -43,6 +44,7 @@ class MLabsPy:
             for item in Labels.multi[m]:
                 p = np.concatenate((p, getattr(self, item)))
             setattr(self, m, p)
+            
             
     def csv_min(self, t):
         if t in Labels.tag or Labels.multi:
@@ -95,13 +97,18 @@ class MLabsPy:
     
     def getCSVdata(self, t):
         if t in Labels.multi:
-            
-            d = np.hstack(('ts', getattr(self, 'ts')))
-            for l in Labels.multi[t]:
-                n = np.hstack(( l, getattr(self, l) ))
-                d = np.vstack(( d, n ))
-            
-            return d
+            CSV=[]
+            CSV.append( "ts," + ",".join( Labels.multi[t]) )
+            # loop the data
+            x=0
+            while x < len(self.ts):
+                line=[]
+                line.append(self.log[x]['ts'])
+                for l in Labels.multi[t]:
+                    line.append(str(self.log[x][l]))
+                CSV.append( ",".join(line) ) 
+                x+=1
+            return CSV
 
 '''
 Plot()
@@ -215,9 +222,8 @@ class Labels:
     defaultPlotData = {
             'x': defaultX, 
             'plot': defaultPlotRow,
-            'stats': { 'min':1.0, 'max': 7.4, 'median': 0.0, 'mean': 0.0, 'mode': [ 0, 1 ] }
+            'stats': { 'min':66.6, 'max': 66.6, 'median': 0.0, 'mean': 0.0, 'mode': [ 0, 1 ] }
         }
-
 
     csv_format=('U8', 'f4', 'f4','f4', 'f4', 'f4','f4', 'f4', 'f4','f4', 'f4', 'f4', 'f4', 'f4','f4', 'f4', 'f4','f4', 'f4', 'f4', 'f4','f4', 'f4', 'f4', 'f4', 'f4', 'f4','f4', 'f4', 'f4','f4', 'f4', 'f4','f4', 'f4', 'f4', 'f4','f4', 'f4', 'f4','f4', 'f4', 'f4','f4', 'f4' )
     csv_cols = (0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44)
@@ -242,6 +248,7 @@ class Labels:
        "kVArhC", "kVArhI"
        )
 
+    # this is the grouping for plot and CSV output
     multi ={
     'v120':['L1', 'L2', 'L3'],
     'v208':['L12', 'L23', 'L31'], 
@@ -255,8 +262,6 @@ class Labels:
     'kWh':[ "kWh_Im", "kWh_Ex" ],
     'kVArh': [ "kVArhC", "kVArhI" ]
     }
-
-
 
     titles = {
     'L1':'Ph-N voltages: V1', 
@@ -273,45 +278,45 @@ class Labels:
     'Uavr':'Average Ph-Ph voltage: Ua',  
     'Iavr':'Average current: Ia',  
     'Freq':'Frequency', 
-    'P':'Total active power (kW)', 
-    'Q':'Total reactive power (kVAr)',
-    'S':'Total apparent power (kVA)',
-    'PF':'Total power factor (pf)', 
+    'P':'Total active power: P', 
+    'Q':'Total reactive power: Q',
+    'S':'Total apparent power: S',
+    'PF':'Total Power Factor: PF', 
     'dI1':'Demand Current (dI) dI1', 
     'dI2':'Demand Current (dI) dI2', 
     'dI3':'Demand Current (dI) dI3', 
     'dIo':'Demand Current (dI) dIo', 
-    'dkW':'Demand Power (kW)', 
-    'dkVAr':'Demand kVAr', 
-    'THDL1':'Total Harmonic Distortion X (THD) THD L1', 
-    'THDL2':'Total Harmonic Distortion Y (THD) THD L2', 
-    'THDL3':'Total Harmonic Distortion Z (THD) THD L3', 
-    'THDL12':'Total Harmonic Distortion X (THD) THD L12', 
-    'THDL23':'Total Harmonic Distortion Y (THD) THD L23', 
-    'THDL31':'Total Harmonic Distortion Z (THD) THD L31', 
-    'THDI1':'Total Harmonic Distortion X (THD) THD I1', 
-    'THDI2':'Total Harmonic Distortion Y (THD) THD I2', 
-    'THDI3':'Total Harmonic Distortion Z (THD) THD I3', 
-    'THDIn':'Total Harmonic Distortion N (THD) THD In',    
-    'P1':'Total active power (kW)', 
-    'P2':'Total active power (kW)',  
-    'P3':'Total active power (kW)',   
-    'Q1':'Total reactive power (kVAr)', 
-    'Q2':'Total reactive power (kVAr)',  
-    'Q3':'Total reactive power (kVAr)',   
-    'kWh_Im':'Import Power kWh', 
-    'kWh_Ex':'Export Power kWh', 
-    'kVArhI':'Inductive Power', 
-    'kVArhC':'Capacitive Power',
+    'dkW':'Demand Active Power: dkW', 
+    'dkVAr':'Demand Reactive Power: dkVAr', 
+    'THDL1':'Total Harmonic Distortion X (THD) L1', 
+    'THDL2':'Total Harmonic Distortion Y (THD) L2', 
+    'THDL3':'Total Harmonic Distortion Z (THD) L3', 
+    'THDL12':'Total Harmonic Distortion X (THD) L12', 
+    'THDL23':'Total Harmonic Distortion Y (THD) L23', 
+    'THDL31':'Total Harmonic Distortion Z (THD) L31', 
+    'THDI1':'Total Harmonic Distortion X (THD) I1', 
+    'THDI2':'Total Harmonic Distortion Y (THD) I2', 
+    'THDI3':'Total Harmonic Distortion Z (THD) I3', 
+    'THDIn':'Total Harmonic Distortion N (THD) In',    
+    'P1':'Active Power: P1', 
+    'P2':'Active Power: P2',  
+    'P3':'Active Power: P3',   
+    'Q1':'Reactive Power: Q1', 
+    'Q2':'Reactive Power: Q2',  
+    'Q3':'Reactive Power: Q3',   
+    'kWh_Im':'Import Power (kWh)', 
+    'kWh_Ex':'Export Power (kWh)', 
+    'kVArhI':'Inductive Power (kVArh)', 
+    'kVArhC':'Capacitive Power (kVArh)',
     'v120':'Ph-N voltages: V1-V2-V3', 
     'v208':'Ph-Ph voltages: U12-U23-U31', 
     'amps':'Phase currents: I1-I2-I3',
-    'kWatt':'Total active power (kW) P1, P2, P3',
-    'kVAr':'Total reactive power (kVAr) Q1, Q2, Q3',
-    'damps':'Demand Current (dI) dI1, dI2, dI3',
-    'THDX':'Total Harmonic Distortion X (THD) THD L1, THD L12, THD I1', 
-    'THDY':'Total Harmonic Distortion Y (THD) THD L2, THD L23, THD I2', 
-    'THDZ':'Total Harmonic Distortion Z (THD) THD L3, THD L31, THD I3', 
+    'kWatt':'Total active power (kW) P1-P2-P3',
+    'kVAr':'Total reactive power (kVAr) Q1-Q2-Q3',
+    'damps':'Demand Current (dI) dI1-dI2-dI3',
+    'THDX':'Total Harmonic Distortion X (THD) L1-L12-I1', 
+    'THDY':'Total Harmonic Distortion Y (THD) L2-L23-I2', 
+    'THDZ':'Total Harmonic Distortion Z (THD) L3-L31-I3', 
     'kWh':'Power (kWh)', 
     'kVArh':'Power (kVArh)'
     }
@@ -435,46 +440,46 @@ class Labels:
     'Vavr':'Voltage (V-avr)', 
     'Uavr':'Voltage (U-avr)',  
     'Iavr':'Current (I-avr)',  
-    'Freq':'Hz',
-    'P':'kW', 
-    'Q':'kVAr', 
-    'S':'kVA', 
-    'PF':'PF',   
+    'Freq':'Freq. (Hz)',
+    'P':'Total Active Power (kW)', 
+    'Q':'Total Reactive Power (kVAr)',
+    'S':'Total Apparent Power (kVA)',
+    'PF':'Total Power Factor (PF)', 
     'dI1':'Demand Current (dI1)', 
     'dI2':'Demand Current (dI2)',  
     'dI3':'Demand Current (dI3)',  
     'dIo':'Demand Current (dIo)',  
-    'dkW':'kW', 
-    'dkVAr':'kVAr', 
-    'THDIn':'THD %',  
-    'THDL1':'THD %', 
-    'THDL2':'THD %',  
-    'THDL3':'THD %',  
-    'THDL12':'THD %', 
-    'THDL23':'THD %',  
-    'THDL31':'THD %',  
-    'THDI1':'THD %', 
-    'THDI2':'THD %',  
-    'THDI3':'THD %',  
-    'P1':'kW',  
-    'P2':'kW',  
-    'P3':'kW',  
-    'Q1':'kVAr',  
-    'Q2':'kVAr',  
-    'Q3':'kVAr',
-    'kWh_Im':'kWh', 
-    'kWh_Ex':'kWh', 
-    'kVArh':'kVArh', 
-    'kVArhI':'kVArh', 
-    'kVArhC':'kVArh',
+    'dkW':'Demand Power (kW)', 
+    'dkVAr':'Demand Power (kVAr)', 
+    'THDL1':'X (THD) L1', 
+    'THDL2':'Y (THD) L2', 
+    'THDL3':'Z (THD) L3', 
+    'THDL12':'X (THD) L12', 
+    'THDL23':'Y (THD) L23', 
+    'THDL31':'Z (THD) L31', 
+    'THDI1':'X (THD) I1', 
+    'THDI2':'Y (THD) I2', 
+    'THDI3':'Z (THD) I3', 
+    'THDIn':'N (THD) In', 
+    'P1':'Active power (kW)', 
+    'P2':'Active power (kW)',  
+    'P3':'Active power (kW)',   
+    'Q1':'Reactive power (kVAr)', 
+    'Q2':'Reactive power (kVAr)',  
+    'Q3':'Reactive power (kVAr)',
+    'kWh_Im':'Import Power (kWh)', 
+    'kWh_Ex':'Export Power (kWh)', 
+    'kVArhI':'Inductive Power', 
+    'kVArhC':'Capacitive Power',
     'v120':'Voltage (V)',  
     'v208':'Voltage (U)', 
     'amps':'Current (I)',
     'damps':'Demand Current (dI)',
-    'THDX':'THD %', 
-    'THDY':'THD %',  
-    'THDZ':'THD %',
-    'kWh':'kWh',
-    'kWatt':'kW',
-    'kVAr':'kVAr', 
+    'THDX':'X (THD) %', 
+    'THDY':'Y (THD) %',  
+    'THDZ':'Z (THD) %',
+    'kWh':'Power (kWh)',
+    'kVArh':'Power (kVArh)', 
+    'kWatt':'Total Active Power (kW)',
+    'kVAr':'Total Reactive Power (kVAr)'
     }
