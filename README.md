@@ -1,19 +1,14 @@
 # MLabsPy
 
 I origonally started this project while working for an in-house AV company, mostly as a 
-Power Distribution Technicain and Rigger, in my speare time.  It was only a basic script 
+Power Distribution Technicain, Rigger and AV technician, in my speare time.  It was only a basic script 
 that ploted 3 graphs, made some HTML files with plotly and had to be run from the console. 
 
-MLabsPy is a python parser for the Motion Labs Power Meter log format.  
+This module cleans and prepares machine generated Power usage data from a Motion Labs PM-XXX generated csv file using NumPy, so the data can be used for data analysis and graphical representation.  
+Jupyter notebooks were used for its ability to take notes and analyze and plot the data with matplotlib or plotly.
 
-The data by itself is usless without context, this is the starting block to help bring this 
-data into a position to be ploted or inserted into a Database to give it some more context.  
-With Big Data and all the tools avalable, an events company with enough forward thinking 
-could use this data along with sales notes, client check in notes, in room support calls, 
-rentals, wifi codes, recordings, invoices, salesforce records, worker notes reguarding a 
-specific event and organize it by timestamp to get better insite into how your services 
-are being used and patterens of use. 
-
+The data by itself is usless without context, this is the starting block to prepair the data before it's ploted or inserted into a Database.
+You want to tell a story of how the service was used, use the data to make predictions for possible up sales.
 
 
 ## PM-XXX Series Power Meter Logger
